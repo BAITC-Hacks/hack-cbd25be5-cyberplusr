@@ -5,6 +5,7 @@ import Legend from './components/Legend';
 import GraphView from './components/GraphView';
 import NodeCard from './components/NodeCard';
 import PriorityTable from './components/PriorityTable';
+import AgentChat from './components/AgentChat';
 import { graphData, CLUSTERS } from './data/realData';
 import type { FilterState } from './types';
 import { ROLE_ORDER } from './roles';
@@ -40,6 +41,7 @@ export default function App(){
  },[filteredNodes,selectedGid,scope,neighborLimit]);
  return <div className="app-shell flex h-screen flex-col overflow-hidden bg-paper">
   <TopBar onSearch={search} searchStatus={searchStatus}/>
+  <AgentChat selectedGid={selectedGid} onSelect={search}/>
   <Filters filters={filters} clusters={CLUSTERS} onChange={setFilters}/>
   <div className="flex flex-wrap items-center gap-3 border-b border-line bg-white px-5 py-2 text-xs text-ink/70">
    <strong>{graphData.nodes.length.toLocaleString('ru')} узлов · {graphData.edges.length.toLocaleString('ru')} связей · {CLUSTERS.length} кластеров</strong>
