@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.gid-mono {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+.react-flow__attribution {
+  display: none;
+}
+
+button:focus-visible,a:focus-visible,tr:focus-visible{outline:2px solid #16764c;outline-offset:2px}
+@media(max-width:900px){.app-shell{height:auto;overflow:visible}.main-workspace{flex-direction:column}.graph-column{height:760px;flex:none}.main-workspace>aside{width:100%;height:auto;max-height:650px;border-top:1px solid #ddd}}
+
+/* Keep graph readable at laptop viewport heights. */
+.app-shell{height:auto;min-height:100vh;overflow:visible}.main-workspace{min-height:760px}.graph-column>div:first-child{min-height:460px}.main-workspace>aside{height:auto;max-height:900px}.react-flow__node-account{font-size:14px}.graph-column table{min-width:760px}.graph-column table tr:focus-visible{outline-offset:-2px}
