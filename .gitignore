@@ -1,0 +1,18 @@
+node_modules
+dist
+.DS_Store
+
+# Local environment and build caches
+.venv/
+__pycache__/
+*.pyc
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+
+# Hackathon dataset and derived financial data
+/data/
+/public/results/
+/src/data/graph_export.json
+
