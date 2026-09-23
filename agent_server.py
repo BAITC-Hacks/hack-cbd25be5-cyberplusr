@@ -4,6 +4,8 @@ import functools
 import http.server
 import json
 import os
+import socket
+import ssl
 import threading
 import urllib.error
 import urllib.request
@@ -56,6 +58,19 @@ INSTRUCTIONS = '''Ты помощник AML-аналитика. Отвечай �
 
 class AgentError(Exception):
     pass
+
+
+def connection_error(error):
+    reason = error.reason if isinstance(error, urllib.error.URLError) else error
+    if isinstance(reason, (TimeoutError, socket.timeout)):
+        return 'OpenAI не ответил за 30 секунд. Попробуйте более короткий вопрос.'
+    if isinstance(reason, ssl.SSLError):
+        return 'Не удалось проверить защищённое соединение с OpenAI. Проверьте сертификаты и настройки прокси.'
+    if isinstance(reason, socket.gaierror):
+        return 'Не удалось найти api.openai.com. Проверьте DNS и подключение к сети.'
+    if isinstance(reason, PermissionError) or getattr(reason, 'winerror', None) == 10013:
+        return 'Системные ограничения блокируют доступ сервера к OpenAI. Перезапустите agent_server.py из обычного терминала VS Code.'
+    return 'Сервер не смог соединиться с OpenAI. Проверьте доступ к api.openai.com и настройки прокси; затем повторите запрос.'
 
 
 class GraphTools:
@@ -111,8 +126,10 @@ def openai_response(payload, key):
                     403: 'Доступ к OpenAI или модели запрещён для этого API-проекта.',
                     404: 'Модель не найдена. Проверьте OPENAI_MODEL в .env.'}
         raise AgentError(messages.get(error.code, 'OpenAI временно недоступен. Попробуйте позже.')) from None
-    except (OSError, ValueError):
-        raise AgentError('Нет ответа OpenAI. Проверьте подключение к интернету.') from None
+    except OSError as error:
+        raise AgentError(connection_error(error)) from None
+    except ValueError:
+        raise AgentError('OpenAI вернул ответ в неожиданном формате. Повторите запрос позже.') from None
 
 
 def ask_agent(graph, question, selected_gid, config, provider=openai_response):

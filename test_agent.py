@@ -2,13 +2,16 @@
 import copy
 import http.client
 import json
+import socket
+import ssl
+import urllib.error
 import tempfile
 import threading
 import unittest
 from pathlib import Path
 from http.server import ThreadingHTTPServer
 from unittest.mock import patch
-from agent_server import AgentError, GraphTools, ask_agent, make_handler
+from agent_server import AgentError, GraphTools, ask_agent, make_handler, openai_response
 
 GRAPH = {'isDemo': True, 'generatedAt': '2026-07-31', 'nodes': [
     {'gid': '900000000000000001', 'role': 'distributor', 'priorityScore': 90, 'depth': 0},
@@ -23,6 +26,20 @@ def final_response(ids):
 
 
 class AgentTests(unittest.TestCase):
+    def test_connection_errors_are_specific_and_do_not_leak_details(self):
+        cases = [(TimeoutError('sensitive'), '30 секунд'),
+                 (ssl.SSLError('sensitive'), 'защищённое соединение'),
+                 (socket.gaierror('sensitive'), 'DNS'),
+                 (PermissionError('sensitive'), 'Системные ограничения')]
+        for reason, expected in cases:
+            with self.subTest(reason=type(reason).__name__):
+                with patch('agent_server.urllib.request.build_opener') as opener:
+                    opener.return_value.open.side_effect = urllib.error.URLError(reason)
+                    with self.assertRaises(AgentError) as caught:
+                        openai_response({}, 'test-only-not-a-real-key')
+                    self.assertIn(expected, str(caught.exception))
+                    self.assertNotIn('sensitive', str(caught.exception))
+
     def test_direction_and_unknown_account(self):
         tools = GraphTools(GRAPH)
         result, _ = tools.call('get_neighbors', {'gid': GRAPH['nodes'][0]['gid'], 'direction': 'in'})
